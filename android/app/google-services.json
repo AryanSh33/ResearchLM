@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "678786760964",
+    "project_id": "researchlm-d28df",
+    "storage_bucket": "researchlm-d28df.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:678786760964:android:e37b4f5457119d6a051051",
+        "android_client_info": {
+          "package_name": "com.example.research_lm"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDwGvmpvWFdiN6qOBQ98aQVZtttdaRK95k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
