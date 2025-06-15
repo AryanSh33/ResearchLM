@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResearchLM - AI Research Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #fe9f5b;
+            --secondary-color: #e7e8eb;
+            --tertiary-color: #ffffff;
+            --text-color: #666666;
+            --disabled-text-color: #b9bdc9;
+            --bg-color: #ffffff;
+        }
+        [data-theme="dark"] {
+            --primary-color: #FFE5B5;
+            --secondary-color: #0a0d12;
+            --tertiary-color: #ffffff;
+            --text-color: #ffffff;
+            --disabled-text-color: #31374c;
+            --bg-color: #1C2138;
+        }
+        .main-wrapper {
+            display: flex;
+            align-items: center;
+            font-family: 'Poppins', sans-serif;
+        }
+        .main-wrapper .text {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+        .main-wrapper .disabled {
+            color: var(--disabled-text-color);
+        }
+        .theme-switch-wrapper {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            margin: 0 6px;
+            background: var(--secondary-color);
+            border-radius: 30px;
+        }
+        .theme-switch-wrapper input {
+            display: none;
+        }
+        .slider-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        .theme-btn-slider {
+            position: absolute;
+            margin: 3px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            transition: transform 0.6s;
+        }
+        .star {
+            position: absolute;
+            background-color: var(--tertiary-color);
+            border-radius: 50%;
+            transition: all 300ms cubic-bezier(0.445, 0.05, 0.55, 0.95);
+        }
+        .star-1 { top: 6px; left: 21px; width: 18px; height: 2px; }
+        .star-2 { top: 11px; left: 17px; width: 18px; height: 2px; }
+        .star-3 { top: 16px; left: 24px; width: 18px; height: 2px; }
+        .star-4, .star-5, .star-6 {
+            opacity: 0;
+            transition: all 300ms 0 cubic-bezier(0.445, 0.05, 0.55, 0.95);
+        }
+        .star-4 { top: 10px; left: 7px; width: 1.5px; height: 1.5px; transform: translate3d(2px, 0, 0); }
+        .star-5 { top: 19px; left: 10px; width: 2px; height: 2px; transform: translate3d(2px, 0, 0); }
+        .star-6 { top: 22px; left: 17px; width: 1.5px; height: 1.5px; transform: translate3d(12px, 0, 0); }
+        input:checked + .slider-wrapper .theme-btn-slider {
+            background: transparent;
+            transform: translateX(21px);
+            box-shadow: 9px 0px 0 0 var(--primary-color);
+        }
+        input:checked + .slider-wrapper .star-1 { width: 1.5px; height: 1.5px; }
+        input:checked + .slider-wrapper .star-2 { width: 2.5px; height: 2.5px; transform: translate3d(12px, 0, 0); }
+        input:checked + .slider-wrapper .star-3 { width: 1.5px; height: 1.5px; transform: translate3d(-4px, 0, 0); }
+        input:checked + .slider-wrapper .star-4,
+        input:checked + .slider-wrapper .star-5,
+        input:checked + .slider-wrapper .star-6 { opacity: 1; }
+        input:checked + .slider-wrapper .star-4 { transform: translate3d(6px, 0, 0); transition-delay: 200ms; }
+        input:checked + .slider-wrapper .star-5 { transform: translate3d(0, 0, 0); transition-delay: 300ms; }
+        input:checked + .slider-wrapper .star-6 { transform: translate3d(15px, 0, 0); transition-delay: 400ms; }
+
+        /* Arrow Button Animation */
+        .arrow-btn {
+            transition: all 0.2s ease;
+        }
+        .arrow-btn:hover {
+            transform: translateY(-1px);
+        }
+        .arrow-btn:active {
+            transform: translateY(0);
+        }
+        .arrow-icon {
+            transition: transform 0.2s ease;
+        }
+        .arrow-btn:hover .arrow-icon {
+            transform: translateY(-1px);
+        }
+
+        /* Custom scrollbar for recent chats */
+        .overflow-y-auto::-webkit-scrollbar {
+            width: 4px;
+        }
+        .overflow-y-auto::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .overflow-y-auto::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.3);
+            border-radius: 2px;
+        }
+        .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+            background: rgba(156, 163, 175, 0.5);
+        }
+
+        /* Custom styles for centered search bar */
+        .search-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .search-textarea {
+            width: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            padding: 12px 50px 12px 16px;
+            font-size: 16px;
+            line-height: 1.5;
+            resize: none;
+            overflow: hidden;
+            min-height: 48px;
+            max-height: 120px;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Chat area styles */
+        .chat-area {
+            display: none;
+        }
+        .chat-area.active {
+            display: flex;
+        }
+        .welcome-area.hidden {
+            display: none;
+        }
+
+        /* Message styles */
+        .message {
+            margin-bottom: 1rem;
+            animation: fadeInUp 0.3s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user-message {
+            background-color: #f3f4f6;
+            color: #111827;
+            border-radius: 18px 18px 4px 18px;
+            padding: 12px 16px;
+            margin-left: auto;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .dark .user-message {
+            background-color: #374151;
+            color: #f3f4f6;
+        }
+
+        .ai-message {
+            color: #111827;
+            padding: 12px 16px;
+            margin-right: auto;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .dark .ai-message {
+            color: #f3f4f6;
+        }
+
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: rgba(156, 163, 175, 0.1);
+            border-radius: 18px 18px 18px 4px;
+            margin-right: auto;
+            max-width: 80px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #9ca3af;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
+        /* Chat item with delete button */
+        .chat-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+        
+        .chat-item-content {
+            flex: 1;
+            text-align: left;
+            padding: 8px 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .delete-chat-btn {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            padding: 8px;
+            color: #9ca3af;
+        }
+        
+        .chat-item-wrapper:hover .delete-chat-btn {
+            opacity: 1;
+        }
+        
+        .chat-item-wrapper {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+        }
+        
+        .chat-item-wrapper:hover {
+            background-color: rgba(156, 163, 175, 0.1);
+        }
+
+        /* Always visible chat input */
+        .chat-input-container {
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 16px;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+
+        .dark .chat-input-container {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+
+        /* New chat shortcut button */
+       .new-chat-shortcut {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 13px;
+
+            background-color: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 4px 10px;
+
+            cursor: pointer;
+            transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        /* Light theme hover */
+        .new-chat-shortcut:hover {
+            background-color: #e5e7eb;
+            border-color: #9ca3af;
+            box-shadow: 0 0 0 2px rgba(100, 116, 139, 0.2);
+        }
+
+        /* Dark theme base */
+        .dark .new-chat-shortcut {
+            background-color: #374151;
+            color: #f9fafb;
+            border: 1px solid #4b5563;
+        }
+
+        /* Dark theme hover */
+        .dark .new-chat-shortcut:hover {
+            background-color: #1f2937;
+            border-color: #6b7280;
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+        }
+
+       /* Search modal styles */
+
+#searchModal .bg-white {
+    background-color: var(--bg-color) !important;
+    color: var(--text-color);
+}
+
+#searchModal input {
+    background-color: var(--secondary-color) !important;
+    color: var(--text-color) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.dark #searchModal input {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+#searchResults {
+    background-color: var(--bg-color);
+}
+
+.search-result-item {
+    background-color: var(--secondary-color);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dark .search-result-item {
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+.search-result-item:hover {
+    background-color: rgba(254, 159, 91, 0.15);
+}
+
+.matched-keyword {
+    background-color: rgba(254, 159, 91, 0.3);
+    color: var(--primary-color) !important;
+}
+.no-results {
+    padding: 20px;
+    text-align: center;
+    color: var(--disabled-text-color);
+    font-size: 14px;
+}
+
+/* Citation styles */
+.citation {
+    font-size: 0.8em;
+    color: var(--disabled-text-color);
+    margin-top: 8px;
+    padding-left: 12px;
+    border-left: 2px solid var(--primary-color);
+}
+
+/* Library modal styles */
+#libraryModal .bg-white {
+    background-color: var(--bg-color) !important;
+}
+
+.library-item {
+    background-color: var(--secondary-color);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.dark .library-item {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.library-item-title {
+    color: var(--text-color);
+}
+
+.library-item-preview {
+    color: var(--text-color);
+    opacity: 0.8;
+}
+
+.library-item-date {
+    color: var(--disabled-text-color);
+}
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 text-gray-900 dark:text-white min-h-screen flex transition-all duration-300" data-theme="dark">
+    
+    <!-- Sidebar with gradient background -->
+    <div class="w-64 bg-gradient-to-b from-gray-100 via-gray-150 to-gray-200 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex flex-col transition-all duration-300 shadow-lg">
+        <!-- New chat button with subtle gradient -->
+        <div class="h-16 px-3 flex items-center">
+            <button id="newChatBtn" class="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg bg-gradient-to-r from-gray-200 to-gray-250 dark:from-gray-800 dark:to-gray-700 hover:from-gray-250 hover:to-gray-300 dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-200 text-gray-700 dark:text-gray-300 shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                New chat
+            </button>
+        </div>
+
+        <div class="flex-1 p-3 space-y-1">
+            <button class="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg hover:bg-gradient-to-r hover:from-gray-200 hover:to-gray-250 dark:hover:from-gray-800 dark:hover:to-gray-700 transition-all duration-200 text-gray-700 dark:text-gray-300">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                Search chats
+            </button>
+
+            <button id="libraryBtn" class="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg hover:bg-gradient-to-r hover:from-gray-200 hover:to-gray-250 dark:hover:from-gray-800 dark:hover:to-gray-700 transition-all duration-200 text-gray-700 dark:text-gray-300">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path>
+                </svg>
+                Research Library
+            </button>
+
+            <div class="pt-6 flex-1 overflow-hidden">
+                <h3 class="px-3 text-xs font-medium text-gray-500 dark:text-gray-500 uppercase tracking-wider mb-3">Recent Chats</h3>
+                <div id="recentChats" class="space-y-1 overflow-y-auto max-h-96 pr-1">
+                    <!-- Recent chats will be added here dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Upgrade section with gradient -->
+        <div class="p-3">
+            <button onclick="window.location.href='getPlus.html'" class="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 hover:from-blue-100 hover:to-purple-100 dark:hover:from-blue-800/30 dark:hover:to-purple-800/30 transition-all duration-200 text-gray-700 dark:text-gray-300 border border-blue-200/50 dark:border-blue-700/50">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Upgrade plan
+            </button>
+        </div>
+    </div>
+
+    <!-- Main content area with gradient -->
+    <div class="flex-1 flex flex-col bg-gradient-to-br from-white via-gray-50 to-gray-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800 transition-all duration-300">
+        <!-- Header with subtle gradient -->
+        <header class="h-16 bg-gradient-to-r from-white to-gray-50 dark:from-gray-950 dark:to-gray-900 px-4 flex items-center justify-between transition-all duration-300 shadow-sm">
+            <div class="flex items-center gap-2">
+                <h1 class="text-lg font-semibold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">ResearchLM</h1>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <button onclick="window.location.href='getPlus.html'" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg">
+                    Get Plus
+                </button>
+                
+                <div class="main-wrapper">
+                    <div class="text" id="light-theme-text">Light</div>
+                    <div class="theme-switch-wrapper">
+                        <label for="theme-btn">
+                            <input type="checkbox" id="theme-btn" />
+                            <div class="slider-wrapper">
+                                <div class="theme-btn-slider"></div>
+                                <span class="star star-1"></span>
+                                <span class="star star-2"></span>
+                                <span class="star star-3"></span>
+                                <span class="star star-4"></span>
+                                <span class="star star-5"></span>
+                                <span class="star star-6"></span>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="text disabled" id="dark-theme-text">Dark</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main content with radial gradient -->
+        <div class="flex-1 flex flex-col bg-gradient-to-br from-white via-gray-50 to-gray-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800 transition-all duration-300">
+            
+            <!-- Welcome Area -->
+            <div id="welcomeArea" class="flex-1 flex flex-col items-center justify-center px-4 py-8">
+                <div class="max-w-4xl w-full text-center space-y-8">
+                    <h2 id="typewriter" class="text-3xl font-semibold bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600 dark:from-gray-200 dark:via-gray-300 dark:to-gray-400 bg-clip-text text-transparent">
+                        <!-- Text will be typed here -->
+                    </h2>
+                </div>
+            </div>
+
+            <!-- Chat Area -->
+            <div id="chatArea" class="chat-area flex-1 flex flex-col">
+                <!-- Messages Container -->
+                <div id="messagesContainer" class="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+                    <!-- Messages will be added here dynamically -->
+                    
+                    <!-- Typing Indicator -->
+                    <div id="typingIndicator" class="typing-indicator">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Input Area (always visible) -->
+            <div class="chat-input-container relative">
+                <!-- New chat shortcut button -->
+                <div id="newChatShortcut" class="new-chat-shortcut">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    New chat
+                </div>
+                
+                <div class="search-container">
+                    <div class="relative bg-gradient-to-r from-gray-100 via-white to-gray-100 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 rounded-2xl shadow-lg hover:shadow-xl focus-within:shadow-xl transition-all duration-300 backdrop-blur-sm w-full">
+                        <textarea 
+                            id="chatTextarea"
+                            class="search-textarea text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                            placeholder="Ask your research query..."
+                            rows="1"
+                        ></textarea>
+                        
+                        <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                            <button id="chatSubmitBtn" class="arrow-btn bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-500 text-white w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg">
+                                <svg class="arrow-icon w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+   <!-- Updated Search Modal -->
+<div id="searchModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md max-h-[80vh] flex flex-col border border-gray-200 dark:border-gray-700">
+        <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative">
+                <input 
+                    id="searchChatInput"
+                    type="text" 
+                    class="w-full px-4 py-2 pl-10 bg-gray-100 dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 border-0"
+                    placeholder="Search in chats..."
+                    autocomplete="off"
+                >
+                <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <button id="closeSearchModal" class="absolute right-3 top-2.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div id="searchResults" class="flex-1 overflow-y-auto p-2 space-y-2 bg-white dark:bg-gray-800">
+            <!-- Search results will be added here -->
+        </div>
+        <div class="p-3 text-center text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            Search through your chat history
+        </div>
+    </div>
+</div>
+
+    <!-- Library Modal -->
+<div id="libraryModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col border border-gray-200 dark:border-gray-700">
+        <div class="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Chat Library</h3>
+            <button id="closeLibraryModal" class="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div id="libraryContent" class="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-2 gap-4 bg-white dark:bg-gray-800">
+            <!-- Chat library items will be added here -->
+        </div>
+        <div class="p-3 text-center text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            Showing all your saved chats
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
