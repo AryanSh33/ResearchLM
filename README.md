@@ -1,8 +1,5 @@
-Certainly! Here's the **complete, copy-paste-ready** `README.md` markdown for your **ResearchLM** GitHub repository:
 
----
 
-```markdown
 # 📚 ResearchLM — AI-Powered Literature Survey Assistant
 
 ResearchLM is an intelligent assistant that extracts key phrases from natural language queries, retrieves relevant academic papers using the Semantic Scholar API, and analyzes abstracts using Google's Gemini API. It offers an interactive chat-like frontend built with HTML, TailwindCSS, and JavaScript, and a FastAPI backend for processing.
@@ -166,8 +163,11 @@ You are a research assistant. Analyze the following abstract and provide:
 
 ## 📷 UI Highlights
 
-> ✅ Add screenshots here (e.g. `docs/demo1.png`, `docs/demo2.png`)
-
+> <img src="Frontend_Web/Screenshot 2025-06-15 160105.png" alt="Photo">
+> <img src="Frontend_Web/Screenshot 2025-06-15 161211.png">
+> <img src="Frontend_Web/Screenshot 2025-06-15 162044.png">
+> <img src="Frontend_Web/RSLMappUI1.jpg">
+> <img src="Frontend_Web/RSLMappUI2.jpg">
 ---
 
 ## 📄 License
@@ -185,18 +185,5 @@ Developed by \[Your Name]
 
 ---
 
-## 🏁 Future Improvements
 
-* [ ] Save & export chat history
-* [ ] Gemini Pro 1.5 vision/model integration
-* [ ] Semantic Scholar co-author graph
-* [ ] Paper PDF summarization
 
----
-
-```
-
----
-
-You can paste this directly into your `README.md` on GitHub. Let me know if you'd like it exported as a file or extended with screenshots, Docker setup, or badges.
-```
