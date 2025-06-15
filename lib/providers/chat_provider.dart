@@ -83,6 +83,7 @@ class ChatProvider extends ChangeNotifier {
 
   // Key changes in the sendMessage method for better API integration
 
+  // Fixed sendMessage method in ChatProvider class
   Future<void> sendMessage(String userId, String content) async {
     print('🚀 Starting sendMessage process...');
     print('👤 User ID: $userId');
@@ -152,10 +153,12 @@ class ChatProvider extends ChangeNotifier {
 
       // Call API for AI response with better error handling
       print('📡 Calling API with query: "$content"');
-      String response;
+      Map<String, dynamic> apiResponse; // Changed from String to Map<String, dynamic>
       try {
-        response = (await _apiService.generateLiteratureSurvey(content)) as String;
-        print('✅ API response received (${response.length} characters)');
+        // Remove the cast to String - the method already returns Map<String, dynamic>
+        apiResponse = await _apiService.generateLiteratureSurvey(content);
+        print('✅ API response received');
+        print('📋 Response keys: ${apiResponse.keys.toList()}');
       } catch (e) {
         print('❌ API call failed: $e');
         // Re-throw with more context
@@ -166,16 +169,9 @@ class ChatProvider extends ChangeNotifier {
         }
       }
 
-      // Parse and process response with better error handling
-      print('🔄 Parsing API response...');
-      Map<String, dynamic> data;
-      try {
-        data = jsonDecode(response);
-        print('📋 Parsed data keys: ${data.keys.toList()}');
-      } catch (e) {
-        print('❌ Failed to parse API response as JSON: $e');
-        throw Exception('Invalid response format from API server');
-      }
+      // Use apiResponse directly instead of trying to decode it again
+      final data = apiResponse; // No need to jsonDecode since it's already a Map
+      print('📋 Data keys: ${data.keys.toList()}');
 
       String aiResponseContent;
 

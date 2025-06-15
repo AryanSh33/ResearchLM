@@ -22,6 +22,7 @@ dependencies:
   email_validator: ^3.0.0
   google_sign_in: ^6.3.0
   flutter_launcher_icons: ^0.14.4
+  google_generative_ai: ^0.4.7
 
 dev_dependencies:
   flutter_test:

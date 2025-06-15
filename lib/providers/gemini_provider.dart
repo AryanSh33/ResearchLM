@@ -343,7 +343,7 @@ class FirestoreService {
           .collection('users')
           .doc(userId)
           .collection('research_queries')
-          .where('conversationId', isEqualTo: conversationId) // Fixed the query
+          .where('conversationId', isEqualTo: conversationId)
           .get();
 
       print('🔥 Found ${researchSnapshot.docs.length} research queries to delete');
@@ -403,6 +403,158 @@ class FirestoreService {
     } catch (e) {
       print('Firestore connection test failed: $e');
       return false;
+    }
+  }
+
+  // ============ GEMINI CONVERSATION METHODS ============
+
+  // Create Gemini conversation linked to a research conversation
+  Future<String> createGeminiConversation(String userId, String baseConversationId, String title) async {
+    try {
+      print('🤖 Creating Gemini conversation for user: $userId, base: $baseConversationId');
+
+      final geminiConversationRef = _db
+          .collection('users')
+          .doc(userId)
+          .collection('gemini_conversations')
+          .doc();
+
+      final geminiConversation = {
+        'id': geminiConversationRef.id,
+        'title': title,
+        'userId': userId,
+        'baseConversationId': baseConversationId,
+        'createdAt': Timestamp.fromDate(DateTime.now()),
+        'updatedAt': Timestamp.fromDate(DateTime.now()),
+        'messageCount': 0,
+        'type': 'gemini_chat',
+      };
+
+      await geminiConversationRef.set(geminiConversation);
+      print('✅ Gemini conversation created successfully: ${geminiConversationRef.id}');
+      return geminiConversationRef.id;
+    } catch (e) {
+      print('❌ Error creating Gemini conversation: $e');
+      throw Exception('Failed to create Gemini conversation: $e');
+    }
+  }
+
+  // Add message to Gemini conversation
+  Future<void> addGeminiMessage(String userId, String geminiConversationId, Message message) async {
+    try {
+      print('🤖 Adding Gemini message to conversation: $geminiConversationId');
+
+      final batch = _db.batch();
+
+      // Add message
+      final messageRef = _db
+          .collection('users')
+          .doc(userId)
+          .collection('gemini_conversations')
+          .doc(geminiConversationId)
+          .collection('messages')
+          .doc(message.id);
+
+      batch.set(messageRef, message.toJson());
+
+      // Update conversation timestamp and message count
+      final conversationRef = _db
+          .collection('users')
+          .doc(userId)
+          .collection('gemini_conversations')
+          .doc(geminiConversationId);
+
+      batch.update(conversationRef, {
+        'updatedAt': Timestamp.fromDate(DateTime.now()),
+        'messageCount': FieldValue.increment(1),
+      });
+
+      await batch.commit();
+      print('✅ Gemini message saved successfully');
+    } catch (e) {
+      print('❌ Error adding Gemini message: $e');
+      throw Exception('Failed to add Gemini message: $e');
+    }
+  }
+
+  // Get Gemini messages for a conversation
+  Stream<List<Message>> getGeminiMessages(String userId, String geminiConversationId) {
+    print('🤖 Setting up Gemini messages stream for conversation: $geminiConversationId');
+
+    return _db
+        .collection('users')
+        .doc(userId)
+        .collection('gemini_conversations')
+        .doc(geminiConversationId)
+        .collection('messages')
+        .orderBy('timestamp')
+        .snapshots()
+        .map((snapshot) {
+      print('🤖 Received ${snapshot.docs.length} Gemini messages from stream');
+
+      final messages = <Message>[];
+      for (var doc in snapshot.docs) {
+        try {
+          final data = doc.data();
+          final message = Message.fromJson(data);
+          messages.add(message);
+        } catch (e) {
+          print('❌ Error parsing Gemini message ${doc.id}: $e');
+          continue;
+        }
+      }
+      return messages;
+    });
+  }
+
+  // Get all Gemini conversations for a base conversation
+  Stream<List<Map<String, dynamic>>> getGeminiConversations(String userId, String baseConversationId) {
+    return _db
+        .collection('users')
+        .doc(userId)
+        .collection('gemini_conversations')
+        .where('baseConversationId', isEqualTo: baseConversationId)
+        .orderBy('updatedAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+        .map((doc) => doc.data())
+        .toList());
+  }
+
+  // Delete Gemini conversation and all its messages
+  Future<void> deleteGeminiConversation(String userId, String geminiConversationId) async {
+    try {
+      print('🤖 Deleting Gemini conversation: $geminiConversationId');
+
+      final batch = _db.batch();
+
+      // Delete all messages first
+      final messagesSnapshot = await _db
+          .collection('users')
+          .doc(userId)
+          .collection('gemini_conversations')
+          .doc(geminiConversationId)
+          .collection('messages')
+          .get();
+
+      for (var doc in messagesSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+
+      // Delete conversation
+      final conversationRef = _db
+          .collection('users')
+          .doc(userId)
+          .collection('gemini_conversations')
+          .doc(geminiConversationId);
+
+      batch.delete(conversationRef);
+
+      await batch.commit();
+      print('✅ Gemini conversation deleted successfully');
+    } catch (e) {
+      print('❌ Error deleting Gemini conversation: $e');
+      throw Exception('Failed to delete Gemini conversation: $e');
     }
   }
 }
