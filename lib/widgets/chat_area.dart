@@ -123,14 +123,14 @@ class _ChatAreaState extends State<ChatArea> {
                 ),
 
                 // Debug button (only in debug mode)
-                if (const bool.fromEnvironment('dart.vm.product') == false)
-                  IconButton(
-                    onPressed: () {
-                      context.read<ChatProvider>().debugState();
-                    },
-                    icon: const Icon(Icons.bug_report, size: 16),
-                    tooltip: 'Debug State',
-                  ),
+                // if (const bool.fromEnvironment('dart.vm.product') == false)
+                //   IconButton(
+                //     onPressed: () {
+                //       context.read<ChatProvider>().debugState();
+                //     },
+                //     icon: const Icon(Icons.bug_report, size: 16),
+                //     tooltip: 'Debug State',
+                //   ),
               ],
             ),
           ),
@@ -413,67 +413,67 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: 32),
 
             // Debug info in development mode
-            if (const bool.fromEnvironment('dart.vm.product') == false) ...[
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      'Debug Info',
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: 8),
-                    Consumer<AuthProvider>(
-                      builder: (context, authProvider, child) {
-                        return Text(
-                          'User ID: ${authProvider.user?.uid ?? 'Not signed in'}',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        );
-                      },
-                    ),
-                    Consumer<ChatProvider>(
-                      builder: (context, chatProvider, child) {
-                        return Column(
-                          children: [
-                            Text(
-                              'Online: ${chatProvider.isOnline}',
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                            Text(
-                              'Conversations: ${chatProvider.conversations.length}',
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                            Text(
-                              'Current Conv ID: ${chatProvider.currentConversationId ?? 'None'}',
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                            Text(
-                              'Messages: ${chatProvider.messages.length}',
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                            Text(
-                              'Loading: ${chatProvider.isLoading}',
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                            if (chatProvider.error != null)
-                              Text(
-                                'Error: ${chatProvider.error}',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.error,
-                                ),
-                              ),
-                          ],
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            // if (const bool.fromEnvironment('dart.vm.product') == false) ...[
+            //   Container(
+            //     padding: const EdgeInsets.all(12),
+            //     decoration: BoxDecoration(
+            //       color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+            //       borderRadius: BorderRadius.circular(8),
+            //     ),
+            //     child: Column(
+            //       children: [
+            //         Text(
+            //           'Debug Info',
+            //           style: Theme.of(context).textTheme.titleSmall,
+            //         ),
+            //         const SizedBox(height: 8),
+            //         Consumer<AuthProvider>(
+            //           builder: (context, authProvider, child) {
+            //             return Text(
+            //               'User ID: ${authProvider.user?.uid ?? 'Not signed in'}',
+            //               style: Theme.of(context).textTheme.bodySmall,
+            //             );
+            //           },
+            //         ),
+            //         Consumer<ChatProvider>(
+            //           builder: (context, chatProvider, child) {
+            //             return Column(
+            //               children: [
+            //                 Text(
+            //                   'Online: ${chatProvider.isOnline}',
+            //                   style: Theme.of(context).textTheme.bodySmall,
+            //                 ),
+            //                 Text(
+            //                   'Conversations: ${chatProvider.conversations.length}',
+            //                   style: Theme.of(context).textTheme.bodySmall,
+            //                 ),
+            //                 Text(
+            //                   'Current Conv ID: ${chatProvider.currentConversationId ?? 'None'}',
+            //                   style: Theme.of(context).textTheme.bodySmall,
+            //                 ),
+            //                 Text(
+            //                   'Messages: ${chatProvider.messages.length}',
+            //                   style: Theme.of(context).textTheme.bodySmall,
+            //                 ),
+            //                 Text(
+            //                   'Loading: ${chatProvider.isLoading}',
+            //                   style: Theme.of(context).textTheme.bodySmall,
+            //                 ),
+            //                 if (chatProvider.error != null)
+            //                   Text(
+            //                     'Error: ${chatProvider.error}',
+            //                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            //                       color: Theme.of(context).colorScheme.error,
+            //                     ),
+            //                   ),
+            //               ],
+            //             );
+            //           },
+            //         ),
+            //       ],
+            //     ),
+            //   ),
+            // ],
           ],
         ),
       ),

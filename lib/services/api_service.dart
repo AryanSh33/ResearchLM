@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl = 'https://a885-34-169-18-101.ngrok-free.app/analyze';
+  static const String baseUrl = 'https://df03-34-16-246-157.ngrok-free.app/literature-survey';
   final http.Client client;
 
   ApiService({http.Client? client}) : client = client ?? http.Client();
@@ -16,16 +16,15 @@ class ApiService {
         throw ArgumentError('Topic cannot be empty');
       }
 
+      // Send topic as query parameter
+      final url = Uri.parse('$baseUrl?query=${Uri.encodeComponent(topic)}');
+
       final response = await client.post(
-        Uri.parse(baseUrl),
+        url,
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
           'Accept': 'application/json',
           'ngrok-skip-browser-warning': 'true',
           'User-Agent': 'Flutter-App/1.0',
-        },
-        body: {
-          'input_text': topic.trim(),
         },
       ).timeout(
         const Duration(seconds: 120),
@@ -58,7 +57,7 @@ class ApiService {
           throw HttpException('HTTP method not allowed.', response: response);
 
         case 422:
-          final errorData = json.decode(response.body);
+          final errorData = decoded;
           if (errorData is Map<String, dynamic> && errorData.containsKey('detail')) {
             final detail = errorData['detail'];
             if (detail is List && detail.isNotEmpty) {
@@ -95,14 +94,12 @@ class ApiService {
 
   Future<bool> testConnection() async {
     try {
+      final testUrl = Uri.parse('$baseUrl?query=test connection');
       final response = await client.post(
-        Uri.parse(baseUrl),
+        testUrl,
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
           'Accept': 'application/json',
-        },
-        body: {
-          'input_text': 'test connection',
+          'User-Agent': 'Flutter-App/1.0',
         },
       ).timeout(
         const Duration(seconds: 30),
